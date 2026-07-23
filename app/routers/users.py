@@ -1,8 +1,8 @@
-from fastapi import APIRouter
+# from fastapi import APIRouter
 
 
-router = APIRouter(prefix="/users", tags =['Users'])
+# router = APIRouter(prefix="/users", tags =['Users'])
 
-@router.post("/")
-def get_user():
-    pass
+# @router.post("/")
+# def get_user():
+#     pass
