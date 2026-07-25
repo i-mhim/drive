@@ -1,4 +1,3 @@
-from fileinput import filename
 from .database import Base
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
 from sqlalchemy.sql.sqltypes import TIMESTAMP
@@ -22,25 +21,30 @@ class Folder():
     parent_folder_id = Column(
         Integer, ForeignKey("folders.id",ondelete="CASCADE"), nullable=True)
 
-class File():
+class File(Base):
     __tablename__ = "files"
     id = Column(Integer, primary_key = True, nullable = False)
     filename = Column(String, nullable= False, unique=True)
-    storage_path = Column(String, nullable= False, unique=True)
+    storage_path = Column(String, nullable= False)
     size = Column(Integer, nullable = False)
     mimetype = Column(String, nullable=False)
     created_at = Column(
         TIMESTAMP(timezone=True), 
         nullable = False, 
         server_default=text('now()'))
-    owner_id = Column(
-        Integer, 
-        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-        )
-    folder_id = Column(
-        Integer, 
-        ForeignKey("folders.id", ondelete="CASCADE"), nullable=False
-        )
+    updated_at = Column(
+    TIMESTAMP(timezone=True),
+    nullable=False,
+    server_default=text("now()"),
+    onupdate=text("now()"))
+    # owner_id = Column(
+    #     Integer, 
+    #     ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    #     )
+    # folder_id = Column(
+    #     Integer, 
+    #     ForeignKey("folders.id", ondelete="CASCADE"), nullable=False
+    #     )
 
 class Share():
     __tablename__ = "shares"
