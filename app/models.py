@@ -24,7 +24,7 @@ class Folder():
 class File(Base):
     __tablename__ = "files"
     id = Column(Integer, primary_key = True, nullable = False)
-    filename = Column(String, nullable= False, unique=True)
+    filename = Column(String, nullable= False)
     storage_path = Column(String, nullable= False)
     size = Column(Integer, nullable = False)
     mimetype = Column(String, nullable=False)
@@ -37,10 +37,10 @@ class File(Base):
     nullable=False,
     server_default=text("now()"),
     onupdate=text("now()"))
-    # owner_id = Column(
-    #     Integer, 
-    #     ForeignKey("users.id", ondelete="CASCADE"), nullable=False
-    #     )
+    owner_id = Column(
+        Integer, 
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+        )
     # folder_id = Column(
     #     Integer, 
     #     ForeignKey("folders.id", ondelete="CASCADE"), nullable=False
