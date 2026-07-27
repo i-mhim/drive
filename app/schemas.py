@@ -33,3 +33,6 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: Optional[int] = None
+
+class FileUpdate(BaseModel):
+    filename: str

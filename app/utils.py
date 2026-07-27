@@ -1,4 +1,6 @@
 from passlib.context import CryptContext
+import uuid
+from pathlib import Path
 
 pwd_context = CryptContext(schemes = ["bcrypt"], deprecated="auto")
 
@@ -9,3 +11,10 @@ def hash(password: str):
 
 def verify(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
+
+def generate_storage_filename(filename: str) -> str:
+    extension = Path(filename).suffix
+
+    unique_name = f"{uuid.uuid4()}{extension}"
+
+    return unique_name
