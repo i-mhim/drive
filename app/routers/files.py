@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status, HTTPException, Response, Depends, UploadFile, File
+from fastapi import APIRouter, status, HTTPException, Response, Depends, UploadFile, File, Form
 from .. import schemas, models, utils, oauth2
 from ..database import get_db
 from sqlalchemy.orm import Session
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/files", tags =['Files'])
 UPLOAD_DIR = "uploads"
 
 @router.post("/upload", status_code=status.HTTP_201_CREATED, response_model = schemas.FileResponse)
-def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
+def upload_file(file: UploadFile = File(...), folder_id: int | None = Form(None), db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
     if not os.path.exists(UPLOAD_DIR):
         os.makedirs(UPLOAD_DIR)
 
@@ -21,12 +21,26 @@ def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db), cur
         shutil.copyfileobj(file.file, buffer)
     
     file_size = os.path.getsize(file_path)
+
+    if folder_id is not None:
+        folder = db.query(models.Folder).filter(
+            models.Folder.id == folder_id,
+            models.Folder.owner_id == current_user.id
+        ).first()
+
+        if folder is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Folder not found"
+            )
+    
     new_file = models.File(
         filename = file.filename, 
         storage_path = file_path,
         size = file_size,
         mimetype = file.content_type,
-        owner_id = current_user.id
+        owner_id = current_user.id,
+        folder_id = folder_id
         )
 
     db.add(new_file)

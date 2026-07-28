@@ -23,6 +23,7 @@ class FileResponse(BaseModel):
     mimetype: str
     created_at: datetime
     owner_id: int
+    folder_id: int
 
     class Config:
         from_attributes = True
@@ -36,3 +37,19 @@ class TokenData(BaseModel):
 
 class FileUpdate(BaseModel):
     filename: str
+
+class FolderCreate(BaseModel):
+    name: str
+    parent_folder_id: int | None = None
+
+class FolderOut(BaseModel):
+    id: int
+    name: str
+    owner_id: int
+    parent_folder_id: Optional[int] = None
+
+    class config: 
+        from_attributes = True
+
+class FolderUpdate(BaseModel):
+    name: str

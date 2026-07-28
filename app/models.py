@@ -11,10 +11,10 @@ class User(Base):
     password = Column(String, nullable = False)
     created_at = Column(TIMESTAMP(timezone=True), nullable = False, server_default=text('now()'))
 
-class Folder():
+class Folder(Base):
     __tablename__ = "folders"
     id = Column(Integer, primary_key = True, nullable = False)
-    name = Column(String, nullable= False, unique=True)
+    name = Column(String, nullable= False)
     created_at = Column(TIMESTAMP(timezone=True), nullable = False, server_default=text('now()'))
     owner_id = Column(
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
@@ -41,10 +41,10 @@ class File(Base):
         Integer, 
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
         )
-    # folder_id = Column(
-    #     Integer, 
-    #     ForeignKey("folders.id", ondelete="CASCADE"), nullable=False
-    #     )
+    folder_id = Column(
+        Integer, 
+        ForeignKey("folders.id", ondelete="CASCADE"), nullable=True
+        )
 
 class Share():
     __tablename__ = "shares"
