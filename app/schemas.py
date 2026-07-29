@@ -1,5 +1,5 @@
 from datetime import datetime
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, model_validator
 from typing import Optional
 
 class UserCreate(BaseModel):
@@ -23,7 +23,7 @@ class FileResponse(BaseModel):
     mimetype: str
     created_at: datetime
     owner_id: int
-    folder_id: int
+    folder_id: Optional[int] = None
 
     class Config:
         from_attributes = True
@@ -53,3 +53,36 @@ class FolderOut(BaseModel):
 
 class FolderUpdate(BaseModel):
     name: str
+
+class PermissionCreate(BaseModel):
+    file_id: Optional[int] = None
+    folder_id: Optional[int] = None
+    user_id: int
+    role: str
+    @model_validator(mode="after")
+    def check_resource(self):
+        if self.file_id is None and self.folder_id is None:
+            raise ValueError(
+                "Either file_id or folder_id must be provided"
+            )
+
+        if self.file_id is not None and self.folder_id is not None:
+            raise ValueError(
+                "Only one of file_id or folder_id can be provided"
+            )
+
+        return self
+
+class PermissionOut(BaseModel):
+    id: int
+    file_id: Optional[int] = None
+    folder_id: Optional[int] = None
+    user_id: int
+    created_at: datetime
+    role: str
+
+    class Config:
+        from_attributes = True
+
+class PermissionUpdate(BaseModel):
+    role: str

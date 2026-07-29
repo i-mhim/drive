@@ -46,10 +46,9 @@ class File(Base):
         ForeignKey("folders.id", ondelete="CASCADE"), nullable=True
         )
 
-class Share():
-    __tablename__ = "shares"
+class Permission(Base):
+    __tablename__ = "permissions"
     id = Column(Integer, primary_key = True, nullable = False)
-    name = Column(String, nullable= False, unique=True)
     created_at = Column(
         TIMESTAMP(timezone=True), 
         nullable = False, 
@@ -62,7 +61,11 @@ class Share():
         Integer, 
         ForeignKey("files.id", ondelete="CASCADE"), nullable=False
         )
-    permission = Column(String, nullable=False)
+    folder_id = Column(
+        Integer, 
+        ForeignKey("folders.id", ondelete="CASCADE"), nullable=True
+        )
+    role = Column(String, nullable=False)
 
 
 

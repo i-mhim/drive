@@ -12,8 +12,7 @@ def read_root():
     return {"hello": "WOrld"}
 
 app.include_router(auth.router)
-# app.include_router(users.router)
+app.include_router(users.router)
 app.include_router(files.router)
 app.include_router(folders.router)
-# app.include_router(shares.router)
-# app.include_router(permissions.router)
+app.include_router(permissions.router)
