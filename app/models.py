@@ -1,5 +1,5 @@
 from .database import Base
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint, Enum
 from sqlalchemy.sql.sqltypes import TIMESTAMP
 from sqlalchemy.sql.expression import text
 from sqlalchemy.orm import relationship
@@ -20,6 +20,14 @@ class Folder(Base):
         Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     parent_folder_id = Column(
         Integer, ForeignKey("folders.id",ondelete="CASCADE"), nullable=True)
+    __table_args__ = (
+        UniqueConstraint(
+            "owner_id",
+            "parent_folder_id",
+            "name",
+            name="uq_owner_parent_name"
+        ),
+    )
 
 class File(Base):
     __tablename__ = "files"
@@ -65,7 +73,7 @@ class Permission(Base):
         Integer, 
         ForeignKey("folders.id", ondelete="CASCADE"), nullable=True
         )
-    role = Column(String, nullable=False)
+    role = Column(Enum("viewer", "editor", "owner", name = "permission_role"), nullable=False)
 
 
 

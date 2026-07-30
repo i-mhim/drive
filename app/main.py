@@ -3,8 +3,6 @@ from app.routers import auth, users, files, folders, permissions
 from .database import engine
 from . import models
 
-models.Base.metadata.create_all(bind=engine)
-
 app = FastAPI()
 
 @app.get("/")

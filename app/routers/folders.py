@@ -23,6 +23,21 @@ def create_folder(
                 status_code=404,
                 detail="Parent folder not found"
             )
+    
+    existing = (
+    db.query(models.Folder)
+    .filter(
+        models.Folder.parent_folder_id == folder.parent_folder_id,
+        models.Folder.name == folder.name
+    )
+    .first()
+    )
+
+    if existing:
+        raise HTTPException(
+            status_code=409,
+            detail="Folder with this name already exists in the parent folder.")
+
     new_folder = models.Folder(
         name = folder.name,
         owner_id = current_user.id, parent_folder_id = folder.parent_folder_id

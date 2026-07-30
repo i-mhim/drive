@@ -4,14 +4,27 @@ from ..database import get_db
 from sqlalchemy.orm import Session
 import os
 import shutil
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 router = APIRouter(prefix="/files", tags =['Files'])
 
 UPLOAD_DIR = "uploads"
 
 @router.post("/upload", status_code=status.HTTP_201_CREATED, response_model = schemas.FileResponse)
-def upload_file(file: UploadFile = File(...), folder_id: int | None = Form(None), db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
+async def upload_file(file: UploadFile = File(...), folder_id: int | None = Form(None), db: Session = Depends(get_db), current_user = Depends(oauth2.get_current_user)):
+    MAX_FILE_SIZE = 100 * 1024 * 1024
+
+    size = 0
+
+    while chunk := await file.read(1024 * 1024):
+        size += len(chunk)
+
+        if size > MAX_FILE_SIZE:
+            raise HTTPException(
+            status_code=413,
+            detail="File too large"
+        )
+
     if not os.path.exists(UPLOAD_DIR):
         os.makedirs(UPLOAD_DIR)
 
@@ -74,6 +87,9 @@ def delete_file(id: int, db: Session = Depends(get_db), current_user: int = Depe
     if file.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
     
+    if os.path.exists(file.storage_path):
+        os.remove(file.storage_path)
+    
     file_query.delete(synchronize_session=False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -107,7 +123,10 @@ def download_file(id: int, db: Session = Depends(get_db), current_user: int = De
     if file.owner_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
 
-    return FileResponse(
-        path=file.storage_path,
-        filename=file.filename
+    return StreamingResponse(
+        utils.file_iterator(path=file.storage_path),
+        media_type=file.mimetype,
+        headers={
+        "Content-Disposition": f'attachment; filename="{file.filename}"'
+        }
     )

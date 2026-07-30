@@ -1,6 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, model_validator
 from typing import Optional
+from sqlalchemy import Enum
 
 class UserCreate(BaseModel):
     email: EmailStr
@@ -54,11 +55,16 @@ class FolderOut(BaseModel):
 class FolderUpdate(BaseModel):
     name: str
 
+class RoleEnum(str, Enum):
+    viewer = "viewer"
+    editor = "editor"
+    owner = "owner"
+
 class PermissionCreate(BaseModel):
     file_id: Optional[int] = None
     folder_id: Optional[int] = None
     user_id: int
-    role: str
+    role: RoleEnum
     @model_validator(mode="after")
     def check_resource(self):
         if self.file_id is None and self.folder_id is None:

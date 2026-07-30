@@ -18,3 +18,8 @@ def generate_storage_filename(filename: str) -> str:
     unique_name = f"{uuid.uuid4()}{extension}"
 
     return unique_name
+
+def file_iterator(path):
+    with open(path, "rb") as file:
+        while chunk := file.read(1024 * 1024):
+            yield chunk
