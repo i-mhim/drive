@@ -1,7 +1,7 @@
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, model_validator
 from typing import Optional
-from sqlalchemy import Enum
+from enum import Enum
 
 class UserCreate(BaseModel):
     email: EmailStr

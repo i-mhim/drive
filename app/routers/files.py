@@ -25,6 +25,8 @@ async def upload_file(file: UploadFile = File(...), folder_id: int | None = Form
             detail="File too large"
         )
 
+    await file.seek(0)
+
     if not os.path.exists(UPLOAD_DIR):
         os.makedirs(UPLOAD_DIR)
 
@@ -95,22 +97,35 @@ def delete_file(id: int, db: Session = Depends(get_db), current_user: int = Depe
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.patch("/{id}", response_model=schemas.FileResponse)
-def update_file(id: int, updated_file: schemas.FileUpdate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    file_query = db.query(models.File).filter(models.File.id == id)
+def update_file(
+    id: int,
+    updated_file: schemas.FileUpdate,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
+):
 
-    file = file_query.first()
+    file = db.query(models.File).filter(
+        models.File.id == id
+    ).first()
 
-    if file == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"file with id: {id} does not exist")
-    
+    if file is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"file with id: {id} does not exist"
+        )
+
     if file.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
-    
-    file_query.update(updated_file.dict(), synchronize_session= False)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to perform requested action"
+        )
+
+    file.filename = updated_file.filename
 
     db.commit()
+    db.refresh(file)
 
-    return file_query.first()
+    return file
 
 @router.get("/{id}/download", status_code=status.HTTP_200_OK)
 def download_file(id: int, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):

@@ -102,41 +102,63 @@ def delete_permission(id: int, db: Session = Depends(get_db), current_user: int 
     if permission == None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"permission with id: {id} doesnt exist")
     
-    file = db.query(models.File).filter(
-        models.File.id == permission.file_id
-    ).first()
+    if permission.file_id:
+        resource = db.query(models.File).filter(
+            models.File.id == permission.file_id
+        ).first()
+    else:
+        resource = db.query(models.Folder).filter(
+            models.Folder.id == permission.folder_id
+        ).first()
 
-    if file.owner_id != current_user.id:
+    if resource is None:
         raise HTTPException(
-            status_code=403,
-            detail="Not authorized"
-        )
+        status_code=404,
+        detail="Resource not found"
+    )
+
+    if resource.owner_id != current_user.id:
+        raise HTTPException(
+        status_code=403,
+        detail="Not authorized"
+    )
     
     permission_query.delete(synchronize_session=False)
     db.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.patch("/{id}", response_model=schemas.PermissionOut)
-def update_permission(id: int, updated_permission: schemas.PermissionUpdate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    permission_query = db.query(models.Permission).filter(models.Permission.id == id)
+def update_permission(
+    id: int,
+    updated_permission: schemas.PermissionUpdate,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
+):
 
-    permission = permission_query.first()
+    permission = db.query(models.Permission).filter(
+        models.Permission.id == id
+    ).first()
 
-    if permission == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"permission with id: {id} does not exist")
-    
+    if permission is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"permission with id: {id} does not exist"
+        )
+
     file = db.query(models.File).filter(
         models.File.id == permission.file_id
     ).first()
 
     if file.owner_id != current_user.id:
         raise HTTPException(
-            status_code=403,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized"
         )
-    
-    permission_query.update(updated_permission.dict(), synchronize_session= False)
+
+
+    permission.role = updated_permission.role
 
     db.commit()
+    db.refresh(permission)
 
-    return permission_query.first()
+    return permission

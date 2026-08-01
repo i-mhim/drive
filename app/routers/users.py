@@ -9,7 +9,7 @@ router = APIRouter(prefix="/users", tags =['Users'])
 
 
 @router.get("/", response_model=List[schemas.UserOut])
-def get_current_user(
+def get_users(
     current_user: models.User = Depends(oauth2.get_current_user), db: Session = Depends(get_db)
 ):
     users = db.query(models.User).all()

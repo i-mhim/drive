@@ -27,6 +27,7 @@ def create_folder(
     existing = (
     db.query(models.Folder)
     .filter(
+        models.Folder.owner_id == current_user.id,
         models.Folder.parent_folder_id == folder.parent_folder_id,
         models.Folder.name == folder.name
     )
@@ -87,19 +88,32 @@ def delete_folder(id: int, db: Session = Depends(get_db), current_user: int = De
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 @router.patch("/{id}", response_model=schemas.FolderOut)
-def update_folder(id: int, updated_file: schemas.FolderUpdate, db: Session = Depends(get_db), current_user: int = Depends(oauth2.get_current_user)):
-    folder_query = db.query(models.Folder).filter(models.Folder.id == id)
+def update_folder(
+    id: int,
+    updated_folder: schemas.FolderUpdate,
+    db: Session = Depends(get_db),
+    current_user: int = Depends(oauth2.get_current_user)
+):
 
-    folder = folder_query.first()
+    folder = db.query(models.Folder).filter(
+        models.Folder.id == id
+    ).first()
 
-    if folder == None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"folder with id: {id} does not exist")
-    
+    if folder is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"folder with id: {id} does not exist"
+        )
+
     if folder.owner_id != current_user.id:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to perform requested action")
-    
-    folder_query.update(updated_file.dict(), synchronize_session= False)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to perform requested action"
+        )
+
+    folder.name = updated_folder.name
 
     db.commit()
+    db.refresh(folder)
 
-    return folder_query.first()
+    return folder
